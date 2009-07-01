@@ -133,10 +133,12 @@ var Behavior = {
         if (!this.initialize) {
           var args = $A(arguments);
 
-          return function() {
+          var returning = function() {
             var initArgs = [this].concat(args);
-            behavior.attach.apply(behavior, initArgs);
+            return behavior.attach.apply(behavior, initArgs);
           };
+          returning.prototype = behavior.prototype;
+          return returning;
         } else {
           var args = (arguments.length == 2 && arguments[1] instanceof Array) ? 
                       arguments[1] : Array.prototype.slice.call(arguments, 1);
@@ -184,4 +186,40 @@ var Behavior = {
     }
   }
 };
+
+Event.delegateBehaviors = Behavior.create({
+  initialize: function(rules) {
+    var events = new Hash;
+    for (var selector in rules) {
+      var behavior = rules[selector];
+      for (var member in behavior.prototype) {
+        var matches = member.match(/^on(.+)/);
+        if (matches && typeof behavior.prototype[member] == 'function') {
+          if (!events.get(matches[1])) events.set(matches[1], {});
+          events.get(matches[1])[selector] = behavior;
+        }
+      }
+    }
+    events.each(function(pair) {
+      this.element.observe(pair.key, Event.addBehavior._wrapObserver(this._invokeEvent.bindAsEventListener(this, pair.value)));
+    }.bind(this));
+  },
+  _invokeEvent: function(event, rules) {
+    var element = $(event.element());
+    while (element != this.element) {
+      for (var selector in rules) {
+        if (element.match(selector)) {
+          var observer = rules[selector];
+          if (!element.$$assigned || !element.$$assigned.include(observer)) {
+            var behavior = observer.attach ? observer.attach(element) : observer.call(element);
+            element.$$assigned = element.$$assigned || [];
+            element.$$assigned.push(observer);
+            return observer.prototype["on"+event.type].call(behavior, event);
+          }
+        }
+      }
+      element = element.up();
+    }
+  }
+});
 
