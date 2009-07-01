@@ -46,7 +46,7 @@ Remote.Form = Behavior.create(Remote.Base, {
     var options = Object.extend({
       url : this.element.action,
       method : this.element.method || 'get',
-      parameters : this.element.serialize({ submit: this._submitButton.name })
+      parameters : this.element.serialize({ submit: this._submitButton ? this._submitButton.name : null })
     }, this.options);
     this._submitButton = null;
     return this._makeRequest(options);
