@@ -205,20 +205,17 @@ Event.delegateBehaviors = Behavior.create({
     }.bind(this));
   },
   _invokeEvent: function(event, rules) {
-    var element = $(event.element());
-    while (element != this.element) {
-      for (var selector in rules) {
-        if (element.match(selector)) {
-          var observer = rules[selector];
-          if (!element.$$assigned || !element.$$assigned.include(observer)) {
-            var behavior = observer.attach ? observer.attach(element) : observer.call(element);
-            element.$$assigned = element.$$assigned || [];
-            element.$$assigned.push(observer);
-            return observer.prototype["on"+event.type].call(behavior, event);
-          }
+    var element;
+    for (var selector in rules) {
+      if (element = e.findElement(selector)) {
+        var observer = rules[selector];
+        if (!element.$$assigned || !element.$$assigned.include(observer)) {
+          var behavior = observer.attach ? observer.attach(element) : observer.call(element);
+          element.$$assigned = element.$$assigned || [];
+          element.$$assigned.push(observer);
+          return observer.prototype["on"+event.type].call(behavior, event);
         }
       }
-      element = element.up();
     }
   }
 });
