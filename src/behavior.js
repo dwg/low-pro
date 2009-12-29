@@ -207,7 +207,7 @@ Event.delegateBehaviors = Behavior.create({
   _invokeEvent: function(event, rules) {
     var element;
     for (var selector in rules) {
-      if (element = e.findElement(selector)) {
+      if (element = event.findElement(selector)) {
         var observer = rules[selector];
         if (!element.$$assigned || !element.$$assigned.include(observer)) {
           var behavior = observer.attach ? observer.attach(element) : observer.call(element);
