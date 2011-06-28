@@ -1,7 +1,7 @@
 Low Pro - Unobtrusive Scripting Extensions to Prototype
 -------------------------------------------------------
 
-Version: 0.5
+Version: 0.6
 Author: Dan Webb (dan@danwebb.net)
 Project Home: http://www.danwebb.net/lowpro/
 Subversion: http://svn.danwebb.net/external/lowpro/
@@ -14,7 +14,7 @@ Low Pro is a small JavaScript library built as an extension to Prototype that ma
 * Event.addBehavior() - add behaviors to elements declaratively using CSS selectors.
 * Behavior object binding - If you prefer a more OO approach to behaviors Behavior.create() will create a behavior class that you can bind to elements.
 
-Compatible with Prototype 1.6
+Compatible with Prototype 1.7
 Tested in: Firefox 1.5 (PC/Mac), Safari 2, IE 6+, Opera 9 (PC/Mac)
 
 Please mail any feedback to dan@danwebb.net

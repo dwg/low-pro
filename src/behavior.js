@@ -54,16 +54,15 @@ Object.extend(Event.addBehavior, {
         var parts = sel.split(/:(?=[a-z]+$)/), css = parts[0], event = parts[1];
         $$(css).each(function(element) {
           if (event) {
-            var wrappedObserver = Event.addBehavior._wrapObserver(observer);
-            $(element).observe(event, wrappedObserver);
-            Event.addBehavior.cache.push([element, event, wrappedObserver]);
+            var eventHandler = element.on(event, Event.addBehavior._wrapObserver(observer));
+            Event.addBehavior.cache.push(eventHandler);
           } else {
-            if (!element.$$assigned || !element.$$assigned.include(observer)) {
+            var assignedObservers = element.retrieve('_lowpro_assigned_observers_') || [];
+            if (!assignedObservers.include(observer)) {
               if (observer.attach) observer.attach(element);
-              
-              else observer.call($(element));
-              element.$$assigned = element.$$assigned || [];
-              element.$$assigned.push(observer);
+              else observer.call(element);
+              assignedObservers.push(observer);
+              element.store('_lowpro_assigned_observers_', assignedObservers);
             }
           }
         });
@@ -73,7 +72,7 @@ Object.extend(Event.addBehavior, {
   
   unload : function() {
     this.cache.each(function(c) {
-      Event.stopObserving.apply(Event, c);
+      c.stop();
     });
     this.cache = [];
   },
@@ -181,7 +180,7 @@ var Behavior = {
       for (var member in bound) {
         var matches = member.match(/^on(.+)/);
         if (matches && typeof bound[member] == 'function')
-          bound.element.observe(matches[1], Event.addBehavior._wrapObserver(bound[member].bindAsEventListener(bound)));
+          bound.element.on(matches[1], Event.addBehavior._wrapObserver(bound[member].bindAsEventListener(bound)));
       }
     }
   }
@@ -201,18 +200,18 @@ Event.delegateBehaviors = Behavior.create({
       }
     }
     events.each(function(pair) {
-      this.element.observe(pair.key, Event.addBehavior._wrapObserver(this._invokeEvent.bindAsEventListener(this, pair.value)));
+      this.element.on(pair.key, Event.addBehavior._wrapObserver(this._invokeEvent.bindAsEventListener(this, pair.value)));
     }.bind(this));
   },
   _invokeEvent: function(event, rules) {
     var element;
     for (var selector in rules) {
       if (element = event.findElement(selector)) {
-        var observer = rules[selector];
-        if (!element.$$assigned || !element.$$assigned.include(observer)) {
+        var observer = rules[selector], assignedObservers = element.retrieve('_lowpro_assigned_observers_') || [];
+        if (!assignedObservers.include(observer)) {
           var behavior = observer.attach ? observer.attach(element) : observer.call(element);
-          element.$$assigned = element.$$assigned || [];
-          element.$$assigned.push(observer);
+          assignedObservers.push(observer);
+          element.store('_lowpro_assigned_observers_', assignedObservers);
           return observer.prototype["on"+event.type].call(behavior, event);
         }
       }
